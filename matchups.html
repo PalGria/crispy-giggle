@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matchups</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    #search {
+      display: block;
+      margin: 0 auto 30px auto;
+      padding: 10px;
+      font-size: 1rem;
+      width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .matches {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .match {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .player {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex: 1 1 40%;
+    }
+
+    .avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ccc;
+    }
+
+    .info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .name {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .result {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .vs {
+      font-size: 1.2rem;
+      color: #888;
+      flex: 0 0 auto;
+    }
+
+    @media (max-width: 600px) {
+      .match {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .player {
+        justify-content: center;
+      }
+
+      .vs {
+        margin: 10px 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Tournament Matchups</h1>
+  <input type="text" id="search" placeholder="Search player name...">
+
+  <div id="matches" class="matches"></div>
+
+  <script>
+    const proxy = "https://corsproxy.io/?";
+    const endpoint = "https://api.ravensburgerplay.com/api/v2/tournament-rounds/28410/matches/paginated/?page=1&page_size=100&avoid_cache=true";
+    const matchesContainer = document.getElementById("matches");
+    const searchInput = document.getElementById("search");
+    let allMatches = [];
+
+    async function fetchMatchups() {
+      try {
+        const res = await fetch(proxy + encodeURIComponent(endpoint));
+        const data = await res.json();
+        allMatches = data.results;
+        renderMatches(allMatches);
+      } catch (err) {
+        console.error("Error fetching matchups:", err);
+        matchesContainer.innerHTML = "<p>Error loading matchups.</p>";
+      }
+    }
+
+    function getWinner(match) {
+      const winningPlayer = match.winning_player;
+      if (!winningPlayer) return "TBD";
+      const [p1, p2] = match.player_match_relationships;
+      if (winningPlayer.id === p1.player.id) return `${p1.user_event_status.best_identifier} won`;
+      if (winningPlayer.id === p2.player.id) return `${p2.user_event_status.best_identifier} won`;
+      return "TBD";
+    }
+
+    function renderMatches(matches) {
+      matchesContainer.innerHTML = matches.map(match => {
+        const [p1, p2] = match.player_match_relationships;
+        if (!p1) return ""; // Skip if any player data is missing
+        if (!p2) {
+          return `
+            <div class="match">
+              <div class="player">
+                <img src="${p1?.player.game_user_profile_picture_url}" class="avatar" alt="${p1?.player.best_identifier}" />
+                <div class="info">
+                  <span class="name">${p1?.user_event_status.best_identifier}</span>
+                  <span class="result">BYE</span>
+                </div>
+              </div>
+              <div class="vs">has a bye</div>
+            </div>
+          `;
+        }
+        const result1 = getWinner(match);
+        return `
+          <div class="match" data-names="${p1?.user_event_status.best_identifier.toLowerCase()} ${p2?.user_event_status.best_identifier.toLowerCase()}">
+            <div class="player">
+              <img src="${p1?.player.game_user_profile_picture_url}" class="avatar" alt="${p1?.player.best_identifier}" />
+              <div class="info">
+                <span class="name">${p1?.user_event_status.best_identifier}</span>
+              </div>
+            </div>
+            <div class="vs">vs</div>
+            <div class="player">
+              <img src="${p2?.player.game_user_profile_picture_url}" class="avatar" alt="${p2?.player.best_identifier}" />
+              <div class="info">
+                <span class="name">${p2?.user_event_status.best_identifier}</span>
+              </div>
+              <div class="result">
+                ${result1}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    searchInput.addEventListener("input", (e) => {
+      const term = e.target.value.toLowerCase();
+      const filtered = allMatches.filter(match => {
+        const [p1, p2] = match.player_match_relationships;
+        if (!p1 || !p2) return false; // Skip if any player data is missing
+        return p1.user_event_status.best_identifier.toLowerCase().includes(term) ||
+          p2.user_event_status.best_identifier.toLowerCase().includes(term);
+      });
+      renderMatches(filtered);
+    });
+
+    fetchMatchups();
+  </script>
+</body>
+
+</html>

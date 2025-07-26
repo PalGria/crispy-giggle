@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tournament Standings</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #search {
+      display: block;
+      margin: 0 auto 30px auto;
+      padding: 10px;
+      font-size: 1rem;
+      width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: scale(1.02);
+    }
+
+    .profile-img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ddd;
+    }
+
+    .info {
+      flex-grow: 1;
+    }
+
+    .info h3 {
+      margin: 0 0 5px;
+      font-size: 1.1rem;
+    }
+
+    .info p {
+      margin: 2px 0;
+      font-size: 0.9rem;
+      color: #555;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Tournament Standings</h1>
+  <input type="text" id="search" placeholder="Search player name...">
+
+  <div id="standings" class="grid"></div>
+
+  <script>
+    const proxy = "https://corsproxy.io/?";
+    const endpoint = proxy + encodeURIComponent("https://api.ravensburgerplay.com/api/v2/tournament-rounds/28409/standings/paginated/?page=1&page_size=400&avoid_cache=true");
+    const standingsContainer = document.getElementById('standings');
+    const searchInput = document.getElementById('search');
+    let players = [];
+
+    async function fetchStandings() {
+      try {
+        const res = await fetch(endpoint);
+        const data = await res.json();
+        players = data.results;
+        renderPlayers(players);
+      } catch (err) {
+        standingsContainer.innerHTML = '<p>Error loading data.</p>';
+      }
+    }
+
+    function renderPlayers(data) {
+      standingsContainer.innerHTML = data.map(player => {
+        const name = player.player.best_identifier || "Unknown";
+        const img = player.user_event_status.full_profile_picture_url;
+        return `
+          <div class="card" data-name="${name.toLowerCase()}">
+            <img src="${img}" alt="${name}" class="profile-img">
+            <div class="info">
+              <h3>#${player.rank} ${name}</h3>
+              <p>Record: ${player.record}</p>
+              <p>Points: ${player.match_points}</p>
+              <p>OMW%: ${(player.opponent_match_win_percentage * 100).toFixed(1)}%</p>
+              <p>OGW%: ${(player.opponent_game_win_percentage * 100).toFixed(1)}%</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    searchInput.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      const filtered = players.filter(p => p.player.best_identifier.toLowerCase().includes(term));
+      renderPlayers(filtered);
+    });
+
+    fetchStandings();
+  </script>
+</body>
+
+</html>
