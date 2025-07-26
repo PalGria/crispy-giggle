@@ -71,11 +71,34 @@
       font-size: 0.9rem;
       color: #555;
     }
+
+    .top-bar {
+      background: #0077cc;
+      padding: 10px 0;
+      text-align: center;
+      position: sticky;
+      top: 0;
+    }
+
+    .top-bar a {
+      color: white;
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .top-bar a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 
 <body>
-
+  <div class="top-bar">
+    <a href="index.html">Index</a>
+    <a href="matchups.html">Matchups</a>
+    <a href="standings.html">Standings</a>
+  </div>
   <h1>Tournament Standings</h1>
   <select id="roundSelect"></select>
   <input type="text" id="search" placeholder="Search player name...">

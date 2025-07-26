@@ -16,6 +16,27 @@
       height: 100vh;
     }
 
+    .top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #0077cc;
+      padding: 10px 0;
+      text-align: center;
+    }
+
+    .top-bar a {
+      color: white;
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .top-bar a:hover {
+      text-decoration: underline;
+    }
+
     .container {
       text-align: center;
     }
@@ -46,6 +67,11 @@
   </style>
 </head>
 <body>
+  <div class="top-bar">
+    <a href="index.html">Index</a>
+    <a href="matchups.html">Matchups</a>
+    <a href="standings.html">Standings</a>
+  </div>
   <div class="container">
     <h1>Welcome to the Tournament Dashboard</h1>
     <a href="matchups.html" class="button">View Matchups</a>
