@@ -131,25 +131,58 @@
 <body>
 
   <h1>Tournament Matchups</h1>
+  <select id="roundSelect"></select>
   <input type="text" id="search" placeholder="Search player name...">
 
   <div id="matches" class="matches"></div>
 
   <script>
     const proxy = "https://corsproxy.io/?";
-    const endpoint = "https://api.ravensburgerplay.com/api/v2/tournament-rounds/28411/matches/paginated/?page=1&page_size=100&avoid_cache=true";
+    const eventEndpoint = "https://api.ravensburgerplay.com/api/v2/events/166598/";
     const matchesContainer = document.getElementById("matches");
     const searchInput = document.getElementById("search");
+    const roundSelect = document.getElementById("roundSelect");
     let allMatches = [];
 
-    async function fetchMatchups() {
-      try {
-        matchesContainer.innerHTML = "<p>Loading matchups.</p>";
+    async function loadRounds() {
+      const cached = localStorage.getItem('eventRounds');
+      if (cached) return JSON.parse(cached);
+      const res = await fetch(proxy + encodeURIComponent(eventEndpoint));
+      const data = await res.json();
+      const rounds = data.tournament_rounds || data.rounds || [];
+      localStorage.setItem('eventRounds', JSON.stringify(rounds));
+      return rounds;
+    }
 
-        const res = await fetch(proxy + encodeURIComponent(endpoint));
+    function populateRoundSelect(rounds) {
+      roundSelect.innerHTML = rounds.map(r => {
+        const id = r.id || r.round_id || r.tournament_round;
+        const label = r.name || `Round ${r.round_number ?? r.number ?? id}`;
+        return `<option value="${id}">${label}</option>`;
+      }).join('');
+    }
+
+    async function fetchMatchups(roundId) {
+      try {
+        const cacheKey = `round_${roundId}_matches`;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          allMatches = JSON.parse(cached);
+          renderMatches(allMatches);
+          return;
+        }
+
+        matchesContainer.innerHTML = "<p>Loading matchups.</p>";
+        const url = `https://api.ravensburgerplay.com/api/v2/tournament-rounds/${roundId}/matches/paginated/?page=1&page_size=100&avoid_cache=true`;
+        const res = await fetch(proxy + encodeURIComponent(url));
         const data = await res.json();
         allMatches = data.results;
         renderMatches(allMatches);
+        const finished = allMatches.every(m => m.winning_player || m.games_won_by_winner !== null);
+        if (finished) {
+          localStorage.setItem(cacheKey, JSON.stringify(allMatches));
+          localStorage.setItem(`round_${roundId}_over`, 'true');
+        }
       } catch (err) {
         console.error("Error fetching matchups:", err);
         matchesContainer.innerHTML = "<p>Error loading matchups.</p>";
@@ -225,7 +258,14 @@
       renderMatches(filtered);
     });
 
-    fetchMatchups();
+    roundSelect.addEventListener('change', e => {
+      fetchMatchups(e.target.value);
+    });
+
+    loadRounds().then(rs => {
+      populateRoundSelect(rs);
+      if (roundSelect.value) fetchMatchups(roundSelect.value);
+    });
   </script>
 </body>
 
