@@ -88,6 +88,7 @@
     const standingsContainer = document.getElementById('standings');
     const searchInput = document.getElementById('search');
     const roundSelect = document.getElementById('roundSelect');
+    const selectedRoundKey = 'selectedRound';
     let players = [];
 
     async function loadRounds() {
@@ -95,7 +96,8 @@
       if (cached) return JSON.parse(cached);
       const res = await fetch(proxy + encodeURIComponent(eventEndpoint));
       const data = await res.json();
-      const rounds = data.tournament_rounds || data.rounds || [];
+      let rounds = data.tournament_rounds || data.rounds || [];
+      if (rounds.results) rounds = rounds.results;
       localStorage.setItem('eventRounds', JSON.stringify(rounds));
       return rounds;
     }
@@ -106,10 +108,13 @@
         const label = r.name || `Round ${r.round_number ?? r.number ?? id}`;
         return `<option value="${id}">${label}</option>`;
       }).join('');
+      const stored = localStorage.getItem(selectedRoundKey);
+      if (stored) roundSelect.value = stored;
     }
 
     async function fetchStandings(roundId) {
       try {
+        if (!roundId) return;
         const cacheKey = `round_${roundId}_standings`;
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
@@ -158,7 +163,9 @@
     });
 
     roundSelect.addEventListener('change', e => {
-      fetchStandings(e.target.value);
+      const val = e.target.value;
+      localStorage.setItem(selectedRoundKey, val);
+      fetchStandings(val);
     });
 
     loadRounds().then(rs => {

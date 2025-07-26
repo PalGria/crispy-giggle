@@ -142,6 +142,7 @@
     const matchesContainer = document.getElementById("matches");
     const searchInput = document.getElementById("search");
     const roundSelect = document.getElementById("roundSelect");
+    const selectedRoundKey = 'selectedRound';
     let allMatches = [];
 
     async function loadRounds() {
@@ -149,7 +150,8 @@
       if (cached) return JSON.parse(cached);
       const res = await fetch(proxy + encodeURIComponent(eventEndpoint));
       const data = await res.json();
-      const rounds = data.tournament_rounds || data.rounds || [];
+      let rounds = data.tournament_rounds || data.rounds || [];
+      if (rounds.results) rounds = rounds.results;
       localStorage.setItem('eventRounds', JSON.stringify(rounds));
       return rounds;
     }
@@ -160,10 +162,13 @@
         const label = r.name || `Round ${r.round_number ?? r.number ?? id}`;
         return `<option value="${id}">${label}</option>`;
       }).join('');
+      const stored = localStorage.getItem(selectedRoundKey);
+      if (stored) roundSelect.value = stored;
     }
 
     async function fetchMatchups(roundId) {
       try {
+        if (!roundId) return;
         const cacheKey = `round_${roundId}_matches`;
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
@@ -178,7 +183,11 @@
         const data = await res.json();
         allMatches = data.results;
         renderMatches(allMatches);
-        const finished = allMatches.every(m => m.winning_player || m.games_won_by_winner !== null);
+        const finished = allMatches.every(m =>
+          m.winning_player &&
+          m.games_won_by_winner != null &&
+          m.games_won_by_loser != null
+        );
         if (finished) {
           localStorage.setItem(cacheKey, JSON.stringify(allMatches));
           localStorage.setItem(`round_${roundId}_over`, 'true');
@@ -259,7 +268,9 @@
     });
 
     roundSelect.addEventListener('change', e => {
-      fetchMatchups(e.target.value);
+      const val = e.target.value;
+      localStorage.setItem(selectedRoundKey, val);
+      fetchMatchups(val);
     });
 
     loadRounds().then(rs => {
