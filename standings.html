@@ -77,27 +77,61 @@
 <body>
 
   <h1>Tournament Standings</h1>
+  <select id="roundSelect"></select>
   <input type="text" id="search" placeholder="Search player name...">
 
   <div id="standings" class="grid"></div>
 
   <script>
     const proxy = "https://corsproxy.io/?";
-    //https://api.ravensburgerplay.com/api/v2/tournament-rounds/28411/standings/paginated/?page=1&page_size=10&avoid_cache=true
-    //https://api.ravensburgerplay.com/api/v2/tournament-rounds/28409/standings/paginated/?page=1&page_size=400&avoid_cache=true
-    const endpoint = proxy + encodeURIComponent("https://api.ravensburgerplay.com/api/v2/tournament-rounds/28413/standings/paginated/?page=1&page_size=400&avoid_cache=true");
+    const eventEndpoint = "https://api.ravensburgerplay.com/api/v2/events/166598/";
     const standingsContainer = document.getElementById('standings');
     const searchInput = document.getElementById('search');
+    const roundSelect = document.getElementById('roundSelect');
+    const selectedRoundKey = 'selectedRound';
     let players = [];
 
-    async function fetchStandings() {
-      try {
-        standingsContainer.innerHTML = "<p>Loading standings...</p>";
+    async function loadRounds() {
+      const cached = localStorage.getItem('eventRounds');
+      if (cached) return JSON.parse(cached);
+      const res = await fetch(proxy + encodeURIComponent(eventEndpoint));
+      const data = await res.json();
+      let rounds = data.tournament_rounds || data.rounds || [];
+      if (rounds.results) rounds = rounds.results;
+      localStorage.setItem('eventRounds', JSON.stringify(rounds));
+      return rounds;
+    }
 
-        const res = await fetch(endpoint);
+    function populateRoundSelect(rounds) {
+      roundSelect.innerHTML = rounds.map(r => {
+        const id = r.id || r.round_id || r.tournament_round;
+        const label = r.name || `Round ${r.round_number ?? r.number ?? id}`;
+        return `<option value="${id}">${label}</option>`;
+      }).join('');
+      const stored = localStorage.getItem(selectedRoundKey);
+      if (stored) roundSelect.value = stored;
+    }
+
+    async function fetchStandings(roundId) {
+      try {
+        if (!roundId) return;
+        const cacheKey = `round_${roundId}_standings`;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          players = JSON.parse(cached);
+          renderPlayers(players);
+          return;
+        }
+
+        standingsContainer.innerHTML = "<p>Loading standings...</p>";
+        const url = `https://api.ravensburgerplay.com/api/v2/tournament-rounds/${roundId}/standings/paginated/?page=1&page_size=400&avoid_cache=true`;
+        const res = await fetch(proxy + encodeURIComponent(url));
         const data = await res.json();
         players = data.results;
         renderPlayers(players);
+        if (localStorage.getItem(`round_${roundId}_over`) === 'true') {
+          localStorage.setItem(cacheKey, JSON.stringify(players));
+        }
       } catch (err) {
         standingsContainer.innerHTML = '<p>Error loading data.</p>';
       }
@@ -128,7 +162,16 @@
       renderPlayers(filtered);
     });
 
-    fetchStandings();
+    roundSelect.addEventListener('change', e => {
+      const val = e.target.value;
+      localStorage.setItem(selectedRoundKey, val);
+      fetchStandings(val);
+    });
+
+    loadRounds().then(rs => {
+      populateRoundSelect(rs);
+      if (roundSelect.value) fetchStandings(roundSelect.value);
+    });
   </script>
 </body>
 
