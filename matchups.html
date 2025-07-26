@@ -36,17 +36,24 @@
       margin: 0 auto;
     }
 
-    .match {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
+      .match {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .table-number {
+        flex-basis: 100%;
+        font-size: 0.9rem;
+        font-weight: bold;
+        color: #444;
+      }
 
     .player {
       display: flex;
@@ -142,28 +149,30 @@
       matchesContainer.innerHTML = matches.map(match => {
         const [p1, p2] = match.player_match_relationships;
         if (!p1) return ""; // Skip if any player data is missing
-        if (!p2) {
-          return `
-            <div class="match">
-              <div class="player">
-                <img src="${p1?.player.game_user_profile_picture_url}" class="avatar" alt="${p1?.player.best_identifier}" />
-                <div class="info">
-                  <span class="name">${p1?.user_event_status.best_identifier}</span>
-                  <span class="result">BYE</span>
-                </div>
+          if (!p2) {
+            return `
+              <div class="match">
+                <div class="table-number">Table ${match.table_number ?? '-'}</div>
+                <div class="player">
+                  <img src="${p1?.player.game_user_profile_picture_url}" class="avatar" alt="${p1?.player.best_identifier}" />
+                  <div class="info">
+                    <span class="name">${p1?.user_event_status.best_identifier}</span>
+                    <span class="result">BYE</span>
+                  </div>
               </div>
               <div class="vs">has a bye</div>
             </div>
           `;
         }
-        const result1 = getWinner(match);
-        return `
-          <div class="match" data-names="${p1?.user_event_status.best_identifier.toLowerCase()} ${p2?.user_event_status.best_identifier.toLowerCase()}">
-            <div class="player">
-              <img src="${p1?.player.game_user_profile_picture_url}" class="avatar" alt="${p1?.player.best_identifier}" />
-              <div class="info">
-                <span class="name">${p1?.user_event_status.best_identifier}</span>
-              </div>
+          const result1 = getWinner(match);
+          return `
+            <div class="match" data-names="${p1?.user_event_status.best_identifier.toLowerCase()} ${p2?.user_event_status.best_identifier.toLowerCase()}">
+              <div class="table-number">Table ${match.table_number ?? '-'}</div>
+              <div class="player">
+                <img src="${p1?.player.game_user_profile_picture_url}" class="avatar" alt="${p1?.player.best_identifier}" />
+                <div class="info">
+                  <span class="name">${p1?.user_event_status.best_identifier}</span>
+                </div>
             </div>
             <div class="vs">vs</div>
             <div class="player">
