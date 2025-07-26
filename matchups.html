@@ -48,24 +48,24 @@
       background: #e9f0ff;
     }
 
-      .match {
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
+    .match {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
 
-      .table-number {
-        flex-basis: 100%;
-        font-size: 0.9rem;
-        font-weight: bold;
-        color: #444;
-      }
+    .table-number {
+      flex-basis: 100%;
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #444;
+    }
 
     .player {
       display: flex;
@@ -139,6 +139,7 @@
   <script>
     const proxy = "https://corsproxy.io/?";
     const eventEndpoint = "https://api.ravensburgerplay.com/api/v2/events/166598/";
+
     const matchesContainer = document.getElementById("matches");
     const searchInput = document.getElementById("search");
     const roundSelect = document.getElementById("roundSelect");
@@ -211,8 +212,8 @@
       matchesContainer.innerHTML = matches.map(match => {
         const [p1, p2] = match.player_match_relationships;
         if (!p1) return ""; // Skip if any player data is missing
-          if (!p2) {
-            return `
+        if (!p2) {
+          return `
               <div class="match">
                 <div class="table-number">Table ${match.table_number ?? '-'}</div>
                 <div class="player">
@@ -226,15 +227,15 @@
             </div>
           `;
         }
-          const winner = getWinner(match);
-          const resultText = winner ? `${winner} won` : (match.games_won_by_winner != null ? 'Draw' : 'TBD');
-          const score = (match.games_won_by_winner != null && match.games_won_by_loser != null)
-            ? `${match.games_won_by_winner}-${match.games_won_by_loser}`
-            : '';
-          const matchClass = !winner && score ? 'draw' : '';
-          const p1Class = winner && winner === p1.user_event_status.best_identifier ? 'winner' : (winner ? 'loser' : matchClass);
-          const p2Class = winner && winner === p2.user_event_status.best_identifier ? 'winner' : (winner ? 'loser' : matchClass);
-          return `
+        const winner = getWinner(match);
+        const resultText = winner ? `${winner} won` : (match.games_won_by_winner != null ? 'Draw' : 'TBD');
+        const score = (match.games_won_by_winner != null && match.games_won_by_loser != null)
+          ? `${match.games_won_by_winner}-${match.games_won_by_loser}`
+          : '';
+        const matchClass = !winner && score ? 'draw' : '';
+        const p1Class = winner && winner === p1.user_event_status.best_identifier ? 'winner' : (winner ? 'loser' : matchClass);
+        const p2Class = winner && winner === p2.user_event_status.best_identifier ? 'winner' : (winner ? 'loser' : matchClass);
+        return `
             <div class="match ${matchClass}" data-names="${p1?.user_event_status.best_identifier.toLowerCase()} ${p2?.user_event_status.best_identifier.toLowerCase()}">
               <div class="table-number">Table ${match.table_number ?? '-'}</div>
               <div class="player ${p1Class}">
