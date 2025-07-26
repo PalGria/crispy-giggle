@@ -83,7 +83,9 @@
 
   <script>
     const proxy = "https://corsproxy.io/?";
-    const endpoint = proxy + encodeURIComponent("https://api.ravensburgerplay.com/api/v2/tournament-rounds/28409/standings/paginated/?page=1&page_size=400&avoid_cache=true");
+    //https://api.ravensburgerplay.com/api/v2/tournament-rounds/28411/standings/paginated/?page=1&page_size=10&avoid_cache=true
+    //https://api.ravensburgerplay.com/api/v2/tournament-rounds/28409/standings/paginated/?page=1&page_size=400&avoid_cache=true
+    const endpoint = proxy + encodeURIComponent("https://api.ravensburgerplay.com/api/v2/tournament-rounds/28411/standings/paginated/?page=1&page_size=400&avoid_cache=true");
     const standingsContainer = document.getElementById('standings');
     const searchInput = document.getElementById('search');
     let players = [];
