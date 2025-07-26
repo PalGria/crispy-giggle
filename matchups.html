@@ -117,6 +117,8 @@
 
     async function fetchMatchups() {
       try {
+        matchesContainer.innerHTML = "<p>Loading matchups.</p>";
+
         const res = await fetch(proxy + encodeURIComponent(endpoint));
         const data = await res.json();
         allMatches = data.results;

@@ -90,6 +90,8 @@
 
     async function fetchStandings() {
       try {
+        standingsContainer.innerHTML = "<p>Loading matchups...</p>";
+
         const res = await fetch(endpoint);
         const data = await res.json();
         players = data.results;
