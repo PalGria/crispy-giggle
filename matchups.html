@@ -148,10 +148,19 @@
 
     async function loadRounds() {
       const cached = localStorage.getItem('eventRounds');
-      if (cached) return JSON.parse(cached);
+      if (cached) {
+        console.log("Using cached rounds");
+        const rounds = JSON.parse(cached);
+        if (rounds.length === 0) {
+          console.warn("No rounds found in cache, fetching from API.");
+        }
+        else {
+          return JSON.parse(cached);
+        }
+      }
       const res = await fetch(proxy + encodeURIComponent(eventEndpoint));
       const data = await res.json();
-      let rounds = data.tournament_rounds || data.rounds || [];
+      let rounds = data?.tournament_phases[0]?.rounds || data.rounds || [];
       if (rounds.results) rounds = rounds.results;
       localStorage.setItem('eventRounds', JSON.stringify(rounds));
       return rounds;
